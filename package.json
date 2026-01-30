@@ -10,10 +10,13 @@
     "web": "expo start --web"
   },
   "dependencies": {
+    "@expo/metro-runtime": "~6.1.2",
     "expo": "~54.0.27",
     "expo-status-bar": "~3.0.9",
     "react": "19.1.0",
-    "react-native": "0.81.5"
+    "react-dom": "19.1.0",
+    "react-native": "0.81.5",
+    "react-native-web": "^0.21.0"
   },
   "keywords": [
     "react-native",
@@ -28,5 +31,8 @@
     "type": "git",
     "url": "https://github.com/Lab-IF-UNISMUH/modul-praktikum-react-native.git"
   },
-  "private": true
+  "private": true,
+  "devDependencies": {
+    "babel-preset-expo": "^54.0.10"
+  }
 }
