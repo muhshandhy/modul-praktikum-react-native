@@ -1,19 +1,27 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, View, Text } from 'react-native';
-import { Header } from './src/components';
+import { SafeAreaView, StyleSheet, View, Text } from 'react-native';
+import { Header, ProfileCard } from './src/components';
 
 export default function App() {
   return (
-    <View style={styles.container}>
-      <Header
-        title="muhshandhy"
-        subtitle="105841106721"
-      />
-      <View style={styles.content}>
-        <Text style={styles.text}>Konten aplikasi di sini</Text>
+    <SafeAreaView style={styles.container}>
+      <View style={styles.headerContainer}>
+        <Header
+          title="muhshandhy"
+          subtitle="105841106721"
+        />
       </View>
-      <StatusBar style="light" />
-    </View>
+      <View style={styles.titleSection}>
+        <Text style={styles.headerTitle}>Profil Mahasiswa</Text>
+      </View>
+
+      <ProfileCard
+        name="Muh Nur Sandi"
+        nim="105841106721"
+        jurusan="Teknik Informatika"
+        imageUri="https://simak.unismuh.ac.id/upload/mahasiswa/105841106721.jpg"
+        onPress={() => alert('Profil Muh Nur Sandi ditekan!')}
+      />
+    </SafeAreaView>
   );
 }
 
@@ -22,14 +30,18 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f5f5f5',
   },
-  content: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
+  headerContainer: {
+    // Styling for header container if needed
   },
-  text: {
-    fontSize: 16,
-    color: '#7f8c8d',
+  titleSection: {
+    backgroundColor: '#3498db',
+    padding: 20,
+    marginTop: -10, // Adjust to overlap/connect with Header if needed
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: 'white',
+    textAlign: 'center',
   },
 });
