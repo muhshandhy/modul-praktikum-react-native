@@ -3,99 +3,194 @@ import {
   SafeAreaView,
   View,
   Text,
-  FlatList,
-  TextInput,
+  ScrollView,
   TouchableOpacity,
-  StyleSheet
+  StyleSheet,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
-import { Header, TodoItem } from './src/components';
-
-const INITIAL_TODOS = [
-  { id: '1', title: 'Belajar React Native', completed: true, date: '31 Jan 2026' },
-  { id: '2', title: 'Mengerjakan Tutorial 06', completed: false, date: '31 Jan 2026' },
-  { id: '3', title: 'Upload Screenshot', completed: false, date: '31 Jan 2026' },
-];
+import { Header, FormInput, SuccessModal } from './src/components';
 
 export default function App() {
-  const [todos, setTodos] = useState(INITIAL_TODOS);
-  const [newTodo, setNewTodo] = useState('');
+  const [form, setForm] = useState({
+    nama: '',
+    nim: '',
+    email: '',
+    password: '',
+    konfirmasiPassword: '',
+    alamat: '',
+  });
 
-  const addTodo = () => {
-    if (newTodo.trim() === '') return;
+  const [errors, setErrors] = useState({});
+  const [modalVisible, setModalVisible] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
 
-    const todo = {
-      id: Date.now().toString(),
-      title: newTodo,
-      completed: false,
-      date: new Date().toLocaleDateString('id-ID', {
-        day: 'numeric',
-        month: 'short',
-        year: 'numeric'
-      }),
-    };
-
-    setTodos([todo, ...todos]);
-    setNewTodo('');
+  const updateForm = (field, value) => {
+    setForm(prev => ({ ...prev, [field]: value }));
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: null }));
+    }
   };
 
-  const toggleTodo = (id) => {
-    setTodos(todos.map(todo =>
-      todo.id === id ? { ...todo, completed: !todo.completed } : todo
-    ));
+  const validate = () => {
+    const newErrors = {};
+
+    if (!form.nama.trim()) {
+      newErrors.nama = 'Nama wajib diisi';
+    } else if (form.nama.length < 3) {
+      newErrors.nama = 'Nama minimal 3 karakter';
+    }
+
+    if (!form.nim.trim()) {
+      newErrors.nim = 'NIM wajib diisi';
+    } else if (!/^\d{12}$/.test(form.nim)) {
+      newErrors.nim = 'NIM harus 12 digit angka';
+    }
+
+    if (!form.email.trim()) {
+      newErrors.email = 'Email wajib diisi';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
+      newErrors.email = 'Format email tidak valid';
+    }
+
+    if (!form.password) {
+      newErrors.password = 'Password wajib diisi';
+    } else if (form.password.length < 6) {
+      newErrors.password = 'Password minimal 6 karakter';
+    }
+
+    if (form.password !== form.konfirmasiPassword) {
+      newErrors.konfirmasiPassword = 'Password tidak cocok';
+    }
+
+    if (!form.alamat.trim()) {
+      newErrors.alamat = 'Alamat wajib diisi';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
-  const deleteTodo = (id) => {
-    setTodos(todos.filter(todo => todo.id !== id));
+  const handleSubmit = () => {
+    if (validate()) {
+      setSubmitted(true);
+      setModalVisible(true); // Tampilkan modal kustom
+    }
   };
 
-  const completedCount = todos.filter(t => t.completed).length;
+  const handleReset = () => {
+    setForm({
+      nama: '',
+      nim: '',
+      email: '',
+      password: '',
+      konfirmasiPassword: '',
+      alamat: '',
+    });
+    setErrors({});
+    setSubmitted(false);
+  };
 
   return (
     <SafeAreaView style={styles.container}>
-      <Header
-        title="Muh Nur Sandi"
-        subtitle="105841106721"
-      />
-
-      <View style={styles.todoHeader}>
-        <Text style={styles.headerTitle}>📝 Todo List</Text>
-        <Text style={styles.headerSubtitle}>
-          {completedCount}/{todos.length} selesai
-        </Text>
-      </View>
-
-      <View style={styles.inputContainer}>
-        <TextInput
-          style={styles.input}
-          placeholder="Tambah tugas baru..."
-          value={newTodo}
-          onChangeText={setNewTodo}
-          onSubmitEditing={addTodo}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.container}
+      >
+        <Header
+          title="Muh Nur Sandi"
+          subtitle="105841106721"
         />
-        <TouchableOpacity style={styles.addButton} onPress={addTodo}>
-          <Text style={styles.addButtonText}>+</Text>
-        </TouchableOpacity>
-      </View>
 
-      <FlatList
-        data={todos}
-        renderItem={({ item }) => (
-          <TodoItem
-            item={item}
-            onToggle={toggleTodo}
-            onDelete={deleteTodo}
+        <View style={styles.titleContainer}>
+          <Text style={styles.headerTitle}>📝 Form Registrasi</Text>
+          <Text style={styles.headerSubtitle}>
+            Lengkapi data diri Anda
+          </Text>
+        </View>
+
+        <ScrollView style={styles.form} showsVerticalScrollIndicator={false}>
+          <FormInput
+            label="Nama Lengkap"
+            value={form.nama}
+            onChangeText={(v) => updateForm('nama', v)}
+            placeholder="Masukkan nama lengkap"
+            error={errors.nama}
+            autoCapitalize="words"
           />
-        )}
-        keyExtractor={item => item.id}
-        ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <Text style={styles.emptyEmoji}>🎉</Text>
-            <Text style={styles.emptyText}>Tidak ada tugas!</Text>
-            <Text style={styles.emptySubtext}>Tambahkan tugas baru</Text>
-          </View>
-        }
-        contentContainerStyle={todos.length === 0 && styles.emptyList}
-      />
+
+          <FormInput
+            label="NIM"
+            value={form.nim}
+            onChangeText={(v) => updateForm('nim', v)}
+            placeholder="Masukkan NIM (12 digit)"
+            error={errors.nim}
+            keyboardType="numeric"
+          />
+
+          <FormInput
+            label="Email"
+            value={form.email}
+            onChangeText={(v) => updateForm('email', v)}
+            placeholder="Masukkan email"
+            error={errors.email}
+            keyboardType="email-address"
+            autoCapitalize="none"
+          />
+
+          <FormInput
+            label="Password"
+            value={form.password}
+            onChangeText={(v) => updateForm('password', v)}
+            placeholder="Masukkan password"
+            error={errors.password}
+            secureTextEntry
+          />
+
+          <FormInput
+            label="Konfirmasi Password"
+            value={form.konfirmasiPassword}
+            onChangeText={(v) => updateForm('konfirmasiPassword', v)}
+            placeholder="Ulangi password"
+            error={errors.konfirmasiPassword}
+            secureTextEntry
+          />
+
+          <FormInput
+            label="Alamat"
+            value={form.alamat}
+            onChangeText={(v) => updateForm('alamat', v)}
+            placeholder="Masukkan alamat lengkap"
+            error={errors.alamat}
+            multiline
+          />
+
+          <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
+            <Text style={styles.submitButtonText}>Daftar</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.resetButton} onPress={handleReset}>
+            <Text style={styles.resetButtonText}>Reset Form</Text>
+          </TouchableOpacity>
+
+          {submitted && !modalVisible && (
+            <View style={styles.successBox}>
+              <Text style={styles.successText}>
+                ✅ Registrasi Selesai!
+              </Text>
+            </View>
+          )}
+
+          <View style={{ height: 50 }} />
+        </ScrollView>
+
+        <SuccessModal
+          visible={modalVisible}
+          onClose={() => setModalVisible(false)}
+          name={form.nama}
+          nim={form.nim}
+        />
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
@@ -105,79 +200,63 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f5f5f5',
   },
-  todoHeader: {
+  titleContainer: {
     backgroundColor: 'white',
     padding: 20,
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
   },
   headerTitle: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: 'bold',
     color: '#2c3e50',
   },
   headerSubtitle: {
     fontSize: 14,
     color: '#7f8c8d',
+    marginTop: 5,
   },
-  inputContainer: {
-    flexDirection: 'row',
-    padding: 15,
-    gap: 10,
-  },
-  input: {
+  form: {
     flex: 1,
-    backgroundColor: 'white',
-    padding: 15,
-    borderRadius: 10,
-    fontSize: 16,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
+    padding: 20,
   },
-  addButton: {
+  submitButton: {
     backgroundColor: '#27ae60',
-    width: 55,
+    padding: 18,
     borderRadius: 10,
     alignItems: 'center',
-    justifyContent: 'center',
+    marginTop: 10,
     elevation: 2,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.2,
     shadowRadius: 2,
   },
-  addButtonText: {
+  submitButtonText: {
     color: 'white',
-    fontSize: 32,
+    fontSize: 18,
     fontWeight: 'bold',
   },
-  emptyContainer: {
-    flex: 1,
+  resetButton: {
+    padding: 18,
+    borderRadius: 10,
     alignItems: 'center',
-    justifyContent: 'center',
-    padding: 50,
-  },
-  emptyEmoji: {
-    fontSize: 80,
-    marginBottom: 20,
-  },
-  emptyText: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#2c3e50',
-  },
-  emptySubtext: {
-    fontSize: 16,
-    color: '#95a5a6',
     marginTop: 10,
   },
-  emptyList: {
-    flexGrow: 1,
+  resetButtonText: {
+    color: '#7f8c8d',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  successBox: {
+    backgroundColor: '#d5f4e6',
+    padding: 15,
+    borderRadius: 10,
+    marginTop: 20,
+    alignItems: 'center',
+  },
+  successText: {
+    color: '#27ae60',
+    fontWeight: '600',
   },
 });
