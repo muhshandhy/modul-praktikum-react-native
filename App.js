@@ -1,20 +1,54 @@
 import { useState } from 'react';
-import { SafeAreaView, View, Text, StyleSheet } from 'react-native';
-import { Header, CounterButton } from './src/components';
+import {
+  SafeAreaView,
+  View,
+  Text,
+  FlatList,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet
+} from 'react-native';
+import { Header, TodoItem } from './src/components';
+
+const INITIAL_TODOS = [
+  { id: '1', title: 'Belajar React Native', completed: true, date: '31 Jan 2026' },
+  { id: '2', title: 'Mengerjakan Tutorial 06', completed: false, date: '31 Jan 2026' },
+  { id: '3', title: 'Upload Screenshot', completed: false, date: '31 Jan 2026' },
+];
 
 export default function App() {
-  const [count, setCount] = useState(0);
+  const [todos, setTodos] = useState(INITIAL_TODOS);
+  const [newTodo, setNewTodo] = useState('');
 
-  const increment = () => setCount(count + 1);
-  const decrement = () => setCount(count - 1);
-  const reset = () => setCount(0);
+  const addTodo = () => {
+    if (newTodo.trim() === '') return;
 
-  // Tentukan warna berdasarkan nilai count
-  const getCountColor = () => {
-    if (count > 0) return '#27ae60'; // Hijau
-    if (count < 0) return '#e74c3c'; // Merah
-    return '#7f8c8d'; // Abu-abu
+    const todo = {
+      id: Date.now().toString(),
+      title: newTodo,
+      completed: false,
+      date: new Date().toLocaleDateString('id-ID', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric'
+      }),
+    };
+
+    setTodos([todo, ...todos]);
+    setNewTodo('');
   };
+
+  const toggleTodo = (id) => {
+    setTodos(todos.map(todo =>
+      todo.id === id ? { ...todo, completed: !todo.completed } : todo
+    ));
+  };
+
+  const deleteTodo = (id) => {
+    setTodos(todos.filter(todo => todo.id !== id));
+  };
+
+  const completedCount = todos.filter(t => t.completed).length;
 
   return (
     <SafeAreaView style={styles.container}>
@@ -23,44 +57,45 @@ export default function App() {
         subtitle="105841106721"
       />
 
-      <View style={styles.content}>
-        <View style={styles.countContainer}>
-          <Text style={styles.label}>Nilai Counter:</Text>
-          <Text style={[styles.count, { color: getCountColor() }]}>
-            {count}
-          </Text>
-          <Text style={styles.status}>
-            {count > 0 ? 'Positif 📈' : count < 0 ? 'Negatif 📉' : 'Nol ⚖️'}
-          </Text>
-        </View>
-
-        <View style={styles.buttonContainer}>
-          <CounterButton
-            title="- 1"
-            onPress={decrement}
-            variant="danger"
-          />
-          <CounterButton
-            title="Reset"
-            onPress={reset}
-            variant="secondary"
-          />
-          <CounterButton
-            title="+ 1"
-            onPress={increment}
-            variant="primary"
-          />
-        </View>
-      </View>
-
-      <View style={styles.infoBox}>
-        <Text style={styles.infoTitle}>💡 Penjelasan State & Props:</Text>
-        <Text style={styles.infoText}>
-          • State: count = {count} (Internal){'\n'}
-          • Props: title, onPress dikirim ke CounterButton{'\n'}
-          • setCount() memicu perubahan UI secara dinamis
+      <View style={styles.todoHeader}>
+        <Text style={styles.headerTitle}>📝 Todo List</Text>
+        <Text style={styles.headerSubtitle}>
+          {completedCount}/{todos.length} selesai
         </Text>
       </View>
+
+      <View style={styles.inputContainer}>
+        <TextInput
+          style={styles.input}
+          placeholder="Tambah tugas baru..."
+          value={newTodo}
+          onChangeText={setNewTodo}
+          onSubmitEditing={addTodo}
+        />
+        <TouchableOpacity style={styles.addButton} onPress={addTodo}>
+          <Text style={styles.addButtonText}>+</Text>
+        </TouchableOpacity>
+      </View>
+
+      <FlatList
+        data={todos}
+        renderItem={({ item }) => (
+          <TodoItem
+            item={item}
+            onToggle={toggleTodo}
+            onDelete={deleteTodo}
+          />
+        )}
+        keyExtractor={item => item.id}
+        ListEmptyComponent={
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyEmoji}>🎉</Text>
+            <Text style={styles.emptyText}>Tidak ada tugas!</Text>
+            <Text style={styles.emptySubtext}>Tambahkan tugas baru</Text>
+          </View>
+        }
+        contentContainerStyle={todos.length === 0 && styles.emptyList}
+      />
     </SafeAreaView>
   );
 }
@@ -70,60 +105,79 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f5f5f5',
   },
-  content: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  countContainer: {
-    alignItems: 'center',
-    marginBottom: 40,
+  todoHeader: {
     backgroundColor: 'white',
-    padding: 40,
-    borderRadius: 20,
-    width: '100%',
-    elevation: 5,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-  },
-  label: {
-    fontSize: 18,
-    color: '#7f8c8d',
-    marginBottom: 10,
-  },
-  count: {
-    fontSize: 100,
-    fontWeight: 'bold',
-  },
-  status: {
-    fontSize: 20,
-    marginTop: 10,
-    fontWeight: '600',
-  },
-  buttonContainer: {
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
     flexDirection: 'row',
-    gap: 10,
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
-  infoBox: {
-    backgroundColor: '#e8f4f8',
-    margin: 20,
-    padding: 15,
-    borderRadius: 10,
-    borderLeftWidth: 4,
-    borderLeftColor: '#3498db',
-  },
-  infoTitle: {
-    fontSize: 14,
+  headerTitle: {
+    fontSize: 20,
     fontWeight: 'bold',
     color: '#2c3e50',
-    marginBottom: 5,
   },
-  infoText: {
-    fontSize: 12,
+  headerSubtitle: {
+    fontSize: 14,
     color: '#7f8c8d',
-    lineHeight: 20,
+  },
+  inputContainer: {
+    flexDirection: 'row',
+    padding: 15,
+    gap: 10,
+  },
+  input: {
+    flex: 1,
+    backgroundColor: 'white',
+    padding: 15,
+    borderRadius: 10,
+    fontSize: 16,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+  },
+  addButton: {
+    backgroundColor: '#27ae60',
+    width: 55,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+  },
+  addButtonText: {
+    color: 'white',
+    fontSize: 32,
+    fontWeight: 'bold',
+  },
+  emptyContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 50,
+  },
+  emptyEmoji: {
+    fontSize: 80,
+    marginBottom: 20,
+  },
+  emptyText: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#2c3e50',
+  },
+  emptySubtext: {
+    fontSize: 16,
+    color: '#95a5a6',
+    marginTop: 10,
+  },
+  emptyList: {
+    flexGrow: 1,
   },
 });
